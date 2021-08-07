@@ -1,0 +1,30 @@
+- name: Create a node
+  os_server:
+    state: present
+    auth:
+      auth_url: https://185.255.90.249:5000/v3
+      #auth_url: https://172.16.111.1:5000/v3
+      username: ehsan
+      password: ehsan@123
+      project_name: blockchain
+    validate_certs: false  
+    name: "{{ name }}{{ number }}"
+    image: f507b0ed-d66e-4e3e-beea-c4f030e3871c 
+    #count: 5
+    key_name: AnsibleServer
+    timeout: 200
+    flavor: 34587a7b-3c40-46f7-9248-452ccb08d3e7 
+    nics:
+      - net-id: 8f76016e-a35b-4e81-9b7c-e62f3b570652
+        #- net-name: public2
+  register: output
+- name: debug
+  debug:
+    var: output.openstack.accessIPv4
+# - name: add_host hostname={{ output.openstack.accessIPV4 }} groupname=new_instances
+#   hosts: output.openstack.accessIPV4
+#   tasks:
+#    - name: Install 
+#      copy:
+#         content: hello world
+#         dest: /tmp/testfile.txt    

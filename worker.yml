@@ -1,0 +1,69 @@
+- name: Config a worker
+  #hosts: germany 
+  hosts: all 
+  become: yes
+  tasks:
+  - name: Copy resolv.conf
+    copy:
+      src: files/resolved.conf
+      dest: /etc/systemd/resolved.conf
+      owner: root
+      group: root
+      mode: 0644
+  - name: systemctl restart
+    systemd: name=systemd-resolved state=restarted     
+  - name: Creates directory
+    file:
+      path: /etc/docker
+      state: directory
+      mode: 0755
+  - name: Copy daemon.json
+    copy:
+      src: files/daemon.json
+      dest: /etc/docker/daemon.json
+      owner: root
+      group: root
+      mode: 0644
+  - name: Update apt
+    apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+  - name: install docker
+    import_tasks: subs/docker.yml
+  - name: Install ca-certificates
+    apt: 
+      name: ca-certificates
+  - name: Add google key
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+    #shell: curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  - name: source list
+    apt_repository: 
+        repo: "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main"
+        state: present
+    #shell: echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+  - name: update
+    shell: apt update
+  - name: kubelet
+    shell: apt install -y kubelet
+  - name: kubeadm
+    shell: apt install -y kubeadm
+#  - name: test
+#    shell: ssh root@185.255.91.131 ls
+#    delegate_to: 127.0.0.1
+#    register: out
+#  - debug: 
+#      var: out
+#
+  - name: Copying token to worker nodes
+    copy: src=token.sh dest=token.sh
+  - name: join
+    shell: sh token.sh
+
+#  - name: Joining worker nodes with kubernetes master
+#    shell: |
+#     kubeadm reset -f
+#     cat join_token | tail -2 > out.sh
+#     sh out.sh
+
+    #- name: token list
+    #  shell: kubeadm token list

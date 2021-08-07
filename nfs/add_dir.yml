@@ -1,0 +1,21 @@
+---
+- name: This will add a directory to NFS storage 
+  hosts: nfs.doomain.ir
+  become: yes
+  tasks:
+    - name: Create a directory
+      file:
+        path: /volumes/{{ directory }}
+        state: directory
+    - name: Make my directory tree readable
+      file:
+        path: /volumes/{{ directory }}
+        mode: 0777
+        recurse: yes
+    - name: add to exportfs
+      lineinfile:
+        path: /etc/exports
+        line: '/volumes/{{ directory }}   *(rw,sync,no_subtree_check)'
+    - name: export and restart
+      shell: exportfs -arvf && systemctl start nfs-kernel-server
+

@@ -1,0 +1,103 @@
+- name: Config Master node
+  #hosts: germany 
+  hosts: all 
+  become: yes
+  tasks:
+    - name: Copy resolv.conf
+      copy:
+        src: files/resolved.conf
+        dest: /etc/systemd/resolved.conf
+        owner: root
+        group: root
+        mode: 0644
+    - name: systemctl restart
+      systemd: name=systemd-resolved state=restarted
+    - name: Creates directory
+      #become: yes
+      file:
+        path: /etc/docker
+        state: directory
+    - name: Copy daemon.json
+      copy:
+        src: files/daemon.json
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: 0644
+    - name: install docker
+      import_tasks: subs/docker.yml
+      tags:
+      - init
+    - name: Adding google key
+      apt_key:
+              #id: 473041FA
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        keyring: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+      #shell: sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    - name: Add an apt signing key
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" 
+        #| sudo tee /etc/apt/sources.list.d/kubernetes.list
+        state: "present"
+    - name: Update apt
+      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+    - name: Disabling swap
+      shell: swapoff -a
+    - name: Installing kubelet kubeadm kubectl
+      become: yes
+      package:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+          - bash-completion
+      tags:
+      - init
+      #apt: name={{ item }} state=installed
+      #name: ['kubelet', 'kubeadm', 'kubectl']
+          #with_items: 
+          #        - kubelet
+          #        - kubeadm
+          #        - kubectl
+    - name: apt-mark kubelet kubeadm kubectl
+      shell: sudo apt-mark hold kubelet kubeadm kubectl
+    - name: Restart docker service
+      shell: sudo systemctl restart docker
+    - name: Initialize master
+      shell: kubeadm init
+      tags: 
+      - init
+    - name: Exports 
+      shell: |
+        echo "complete -F __start_kubectl k" >> /root/.bashrc
+        echo "source <(kubectl completion bash)" >> /root/.bashrc
+        echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> /root/.bashrc
+        echo "complete -F __start_kubectl k" >> .bashrc
+        echo "source <(kubectl completion bash)" >> .bashrc
+        echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> .bashrc
+        strace -eopenat kubectl version
+      tags: 
+      - init
+    - name: Export2
+      shell: kubectl version | base64 | tr -d '\n'
+      register: output
+    - name: Exec all
+      shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version={{ output.stdout }}"
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      #complete -F __start_kubectl k
+              #source <(kubectl completion bash)
+      #- name: Source .bashrc
+      #  become: yes
+      #  shell: source /root/.bashrc
+    - debug:
+        var: output.stdout
+        #- name: Kube Apply
+
+      #    - name: Exports
+#      shell: |
+#	     r -p $HOME/.kube
+#	     sudo cp -f /etc/kubernetes/admin.conf $HOME/.kube/config
+#	     sudo chown $(id -u):$(id -g) $HOME/.kube/config 
+
+

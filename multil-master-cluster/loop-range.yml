@@ -1,0 +1,10 @@
+---
+- name: This is a loop in range
+  hosts: localhost
+  tasks:
+  - name: create vhosts
+    include_tasks: add_node.yml
+    loop: "{{ range(0, count|int)|list }}"
+    loop_control:
+      loop_var: number
+          

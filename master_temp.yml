@@ -1,0 +1,18 @@
+- name: Config Master node
+  #hosts: germany 
+  hosts: all 
+  remote_user: root
+  tasks:
+    - name: Exports 
+      shell: echo "complete -F __start_kubectl k" >> /root/.bashrc
+    - name: Exports 
+      shell: echo "source <(kubectl completion bash)" >> /root/.bashrc
+    - name: Exports 
+      shell: echo "export KUBECONFIG=/etc/kubernetes/admin.conf" >> /root/.bashrc
+    - name: Export2
+      shell: kubectl version | base64 | tr -d '\n'
+      register: output
+    - debug:
+        var: output.stdout
+    - name: Kube Apply
+      shell: kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version={{ output.stdout }}"
