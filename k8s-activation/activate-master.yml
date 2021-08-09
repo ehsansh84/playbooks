@@ -1,33 +1,14 @@
 - name: Activate Master node
   hosts: all
-  #become_user: root
-  #  vars:
-  #    KUBECONFIG: /etc/kubernetes/admin.conf
   tasks:
-          #    - name: Initialize master
-          #      shell: kubeadm init
-          #    - name: Temp
-          #      debug: msg={{ ansible_env.PATH }}
-          #    - name: esi
-          #      environment:
-          #        EHSAN: "SHIT"
-          #      debug: msg={{ ansible_env.EHSAN }}
-          #    - name: set KUBECONFIG
-          #      shell: "echo $KUBECONFIG"
-          #      environment:
-          #        KUBECONFIG: /etc/kubernetes/admin.conf
+    - name: Initialize master
+      shell: kubeadm init
+      become: yes
     - name: Export2
       shell: kubectl version | base64 | tr -d '\n'
       register: output
-      #    - name: Export2
-      #      shell: printenv
-      #      #become: yes
-      #    - name: EXPORT
-      #      shell: export KUBECONFIG="/etc/kubernetes/admin.conf"
     - name: Print
       debug: msg="kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version={{ output.stdout }} --kubeconfig=/etc/kubernetes/admin.conf"
-    - name: wget
-      shell: "wget https://cloud.weave.works/k8s/net?k8s-version={{ output.stdout }}"
     - name: Exec all
       shell: "kubectl apply -f https://cloud.weave.works/k8s/net?k8s-version={{ output.stdout }}  --kubeconfig=/etc/kubernetes/admin.conf"
       become: yes
