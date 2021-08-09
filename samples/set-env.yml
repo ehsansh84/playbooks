@@ -1,0 +1,7 @@
+- hosts: all 
+  tasks:
+          #   - environment:
+          #     MYVAR: "Value of MyVAR"
+  - name: Adding the path in the bashrc files
+    lineinfile: dest=/root/.bashrc line='export EHSAN=FUCK' insertafter='EOF' state=present   
+  - debug: msg="{{ lookup('env','EHSAN') }}"
