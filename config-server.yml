@@ -13,8 +13,8 @@
      shell: grep "nameserver 185.51.200.2" /etc/resolv.conf || sed -i '1inameserver 185.51.200.2' /etc/resolv.conf
    - name: install docker
      shell: apt install docker.io
-   - name: install docker-compose
-     shell: apt install docker-compose
+   - name: install -y docker-compose
+     shell: apt install -y docker-compose
    - name: import mongodb key
      apt_key: keyserver=hkp://keyserver.ubuntu.com:80 id=7F0CEB10 state=present
    - name: Add MongoDB repository
