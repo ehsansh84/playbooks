@@ -12,7 +12,7 @@
    - name: Activate shecan on /etc/resolve.conf
      shell: grep "nameserver 185.51.200.2" /etc/resolv.conf || sed -i '1inameserver 185.51.200.2' /etc/resolv.conf
    - name: install docker
-     shell: apt install docker.io
+     shell: apt install -y docker.io
    - name: install -y docker-compose
      shell: apt install -y docker-compose
    - name: import mongodb key
